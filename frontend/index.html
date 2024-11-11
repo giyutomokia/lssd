@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Registration App</title>
+  <style>
+    /* Basic reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f4f7fc;
+      color: #333;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background-color: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #4CAF50;
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+    h3 {
+      font-size: 1.5rem;
+      margin-top: 30px;
+      margin-bottom: 10px;
+      color: #444;
+    }
+    form {
+      display: grid;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    input {
+      padding: 12px;
+      font-size: 1rem;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+    }
+    input:focus {
+      border-color: #4CAF50;
+      outline: none;
+    }
+    button {
+      padding: 12px;
+      font-size: 1rem;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background-color: #f1f1f1;
+      color: #333;
+    }
+    td {
+      font-size: 1rem;
+    }
+    .actions button {
+      background-color: #ff9800;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: white;
+      cursor: pointer;
+      margin-right: 10px;
+      transition: background-color 0.3s ease;
+    }
+    .actions button:hover {
+      background-color: #e68900;
+    }
+    .delete-btn {
+      background-color: #f44336;
+    }
+    .delete-btn:hover {
+      background-color: #e53935;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>User Registration</h2>
+    <form id="userForm">
+      <input type="text" id="name" placeholder="Enter your name" required />
+      <input type="email" id="email" placeholder="Enter your email" required />
+      <input type="date" id="dateOfBirth" required />
+      <button type="submit">Add User</button>
+    </form>
+    <h3>Registered Users</h3>
+    <table id="usersTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Date of Birth</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const apiUrl = 'http://localhost:5000/api/users';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchUsers();
+
+      const form = document.getElementById('userForm');
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        addUser();
+      });
+    });
+
+    function fetchUsers() {
+      fetch(apiUrl)
+        .then(response => response.json())
+        .then(users => {
+          const tbody = document.querySelector('#usersTable tbody');
+          tbody.innerHTML = '';
+          users.forEach(user => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${user.name}</td>
+              <td>${user.email}</td>
+              <td>${user.dateOfBirth}</td>
+              <td class="actions">
+                <button onclick="editUser(${user.id})">Edit</button>
+                <button class="delete-btn" onclick="deleteUser(${user.id})">Delete</button>
+              </td>
+            `;
+            tbody.appendChild(row);
+          });
+        });
+    }
+
+    function addUser() {
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const dateOfBirth = document.getElementById('dateOfBirth').value;
+
+      fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, dateOfBirth })
+      })
+      .then(response => response.json())
+      .then(() => {
+        fetchUsers();
+        document.getElementById('userForm').reset();
+      });
+    }
+
+    function editUser(id) {
+      const name = prompt('Enter new name');
+      const email = prompt('Enter new email');
+      const dateOfBirth = prompt('Enter new date of birth (YYYY-MM-DD)');
+      
+      fetch(`${apiUrl}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, dateOfBirth })
+      })
+      .then(() => fetchUsers());
+    }
+
+    function deleteUser(id) {
+      fetch(`${apiUrl}/${id}`, { method: 'DELETE' })
+        .then(() => fetchUsers());
+    }
+  </script>
+</body>
+</html>
